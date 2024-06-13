@@ -15,4 +15,7 @@ SELECT '02' || SUBSTR(PHONE_NUMBER, 4) AS PHONE_NUMBER FROM EMPLOYEES;
 --이 열의 열 별칭은 name입니다.(힌트 : rpad와 substr 또는 substr 그리고 length 이용)
 --조건 3) 급여는 전체 10자리로 출력하되 나머지 자리는 *로 출력합니다. 
 --이 열의 열 별칭은 salary입니다.(힌트 : lpad 이용)
-SELECT RPAD(SUBSTR(FIRST_NAME, 1, 3), LENGTH(FIRST_NAME), '*') name, LPAD(SALARY, 10, '*') salary FROM EMPLOYEES WHERE LOWER(JOB_ID) = 'it_prog';
+SELECT FIRST_NAME,
+        RPAD(SUBSTR(FIRST_NAME, 1, 3), LENGTH(FIRST_NAME), '*') name, 
+        LPAD(SALARY, 10, '*') salary 
+FROM EMPLOYEES WHERE LOWER(JOB_ID) = 'it_prog';

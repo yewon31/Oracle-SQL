@@ -1,0 +1,36 @@
+--집합연산자
+
+/*
+UNION = 합집합(중복x)
+UNION ALL = 합집합 (중복○)
+INTERSECT = 교집합
+MINUS = 차집합
+
+컬럼 개수가 일치해야 집합연산자 사용이 가능합니다.
+*/
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE HIRE_DATE LIKE '04%'
+UNION
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE DEPARTMENT_ID = 20;
+-----------------------------------------------------------------------
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE HIRE_DATE LIKE '04%'
+UNION ALL
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE DEPARTMENT_ID = 20;
+-----------------------------------------------------------------------
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE HIRE_DATE LIKE '04%'
+INTERSECT
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE DEPARTMENT_ID = 20;
+-----------------------------------------------------------------------
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE HIRE_DATE LIKE '04%'
+MINUS
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE DEPARTMENT_ID = 20;
+-----------------------------------------------------------------------
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE HIRE_DATE LIKE '04%';
+SELECT FIRST_NAME, HIRE_DATE FROM EMPLOYEES WHERE DEPARTMENT_ID = 20;
+-----------------------------------------------------------------------
+-- 집합연산자는 DUAL같은 가상 데이터를 만들어서 합칠 수도 있습니다.
+SELECT 200 AS 번호, 'HONG' AS 이름, '서울시' AS 지역 FROM DUAL
+UNION ALL
+SELECT 300, 'LEE','경기도' FROM DUAL
+UNION ALL
+SELECT EMPLOYEE_ID, LAST_NAME,'서울시' FROM EMPLOYEES;
+
