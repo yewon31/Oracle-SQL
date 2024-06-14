@@ -45,3 +45,147 @@ AVG(SALARY)
 FROM EMPLOYEES
 WHERE AVG(SALARY) >= 5000 -- 그룹의 조건을 적는 곳은 HAVING 이라고 따로 있음.
 GROUP BY DEPARTMENT_ID;
+--------------------------------------------------------------------
+-- HAVING절 - 그룹바이의 조건
+SELECT DEPARTMENT_ID, SUM(SALARY), COUNT(*)
+FROM EMPLOYEES
+GROUP BY DEPARTMENT_ID
+HAVING SUM(SALARY) >= 100000 OR COUNT(*) >= 5;
+--
+SELECT DEPARTMENT_ID, JOB_ID, AVG(SALARY), COUNT(*), COUNT(COMMISSION_PCT) AS 커미션받는사람
+FROM EMPLOYEES
+WHERE JOB_ID NOT LIKE 'SA%'
+GROUP BY DEPARTMENT_ID, JOB_ID
+HAVING AVG(SALARY) >= 10000
+ORDER BY AVG(SALARY) DESC;
+--
+SELECT DEPARTMENT_ID, AVG(SALARY) AS 급여평균, SUM(SALARY) AS 급여합
+FROM EMPLOYEES
+WHERE DEPARTMENT_ID IS NOT NULL AND HIRE_DATE LIKE '05%'
+GROUP BY DEPARTMENT_ID
+HAVING AVG(SALARY) >= 5000
+ORDER BY DEPARTMENT_ID DESC;
+
+-- 시험대비용
+-- ROLLUP - GROUP BY절과 함께 사용되고, 상위그룹의 합계, 토탈 등을 구합니다.
+SELECT DEPARTMENT_ID,
+        SUM (SALARY),
+        AVG (SALARY)
+FROM EMPLOYEES
+GROUP BY DEPARTMENT_ID
+ORDER BY DEPARTMENT_ID; -- ROLLUP X
+
+SELECT DEPARTMENT_ID,
+        SUM (SALARY),
+        AVG (SALARY)
+FROM EMPLOYEES
+GROUP BY ROLLUP(DEPARTMENT_ID)
+ORDER BY DEPARTMENT_ID; -- ROLLUP O, 전체 총계
+
+SELECT DEPARTMENT_ID,
+        JOB_ID,
+        SUM(SALARY),
+        AVG(SALARY)
+FROM EMPLOYEES
+GROUP BY DEPARTMENT_ID, JOB_ID
+ORDER BY DEPARTMENT_ID; -- ROLLUP X
+
+SELECT DEPARTMENT_ID,
+        JOB_ID,
+        SUM(SALARY),
+        AVG(SALARY)
+FROM EMPLOYEES
+GROUP BY ROLLUP(DEPARTMENT_ID, JOB_ID)
+ORDER BY DEPARTMENT_ID; -- ROLLUP O, 전체 총계 + 주 그룹 총계
+
+-- CUBE - 롤업 + 서브그룹에 총계가 추가됨
+SELECT DEPARTMENT_ID,
+        JOB_ID,
+        SUM(SALARY),
+        AVG(SALARY)
+FROM EMPLOYEES
+GROUP BY CUBE ( DEPARTMENT_ID, JOB_ID )
+ORDER BY DEPARTMENT_ID;
+
+-- GROUPING함수 - 그룹바이로 만들어진 경우는 0반환, 롤업 또는 큐브로 만들어진 행인 경우는 1을 반환
+SELECT DECODE(GROUPING(department_id), 1, '<<총계>>', department_id) department_id,
+       DECODE(GROUPING(job_id), 1, '<소계>', job_id) AS job_id,
+       TRUNC(SUM(salary))
+FROM employees
+GROUP BY CUBE(department_id, job_id) --ROLLUP/CUBE 바꿔보기
+ORDER BY department_id;
+
+-----------------------------------------------------------------------------------------
+--문제 1.
+--사원 테이블에서 JOB_ID별 사원 수를 구하세요.
+SELECT JOB_ID, COUNT(JOB_ID) 사원수
+FROM EMPLOYEES
+GROUP BY JOB_ID
+ORDER BY 사원수 DESC;
+--사원 테이블에서 JOB_ID별 월급의 평균을 구하세요. 월급의 평균 순으로 내림차순 정렬하세요.
+SELECT JOB_ID, TO_CHAR(AVG(SALARY), '$999,999,999') 월급평균
+FROM EMPLOYEES
+GROUP BY JOB_ID
+ORDER BY 월급평균 DESC;
+--시원 테이블에서 JOB_ID별 가장 빠른 입사일을 구하세요. JOB_ID로 내림차순 정렬하세요.
+SELECT JOB_ID, MIN(HIRE_DATE) "가장 빠른 입사일"
+FROM EMPLOYEES
+GROUP BY JOB_ID
+ORDER BY JOB_ID DESC;
+
+--문제 2.
+--사원 테이블에서 입사 년도 별 사원 수를 구하세요.
+SELECT TO_CHAR(HIRE_DATE, 'YY') 입사년도, COUNT(*) 사원수
+FROM EMPLOYEES
+GROUP BY TO_CHAR(HIRE_DATE, 'YY')
+ORDER BY 사원수 DESC;
+
+--문제 3.
+--급여가 1000 이상인 사원들의 부서별 평균 급여를 출력하세요. 단 부서 평균 급여가 2000이상인 부서만 출력
+SELECT DEPARTMENT_ID, TRUNC(AVG(SALARY)) 평균급여
+FROM EMPLOYEES
+WHERE SALARY >= 1000
+GROUP BY DEPARTMENT_ID
+HAVING AVG(SALARY) >= 2000
+ORDER BY 평균급여 DESC;
+
+--문제 4.
+--사원 테이블에서 commission_pct(커미션) 컬럼이 null이 아닌 사람들의
+--department_id(부서별) salary(월급)의 평균, 합계, count를 구합니다.
+--조건 1) 월급의 평균은 커미션을 적용시킨 월급입니다.
+--조건 2) 평균은 소수 2째 자리에서 절삭 하세요.
+SELECT DEPARTMENT_ID, TRUNC(AVG((SALARY+(SALARY*COMMISSION_PCT))), 2) 급여평균, SUM(SALARY) 급여합계, COUNT(*)
+FROM EMPLOYEES
+WHERE COMMISSION_PCT IS NOT NULL
+GROUP BY DEPARTMENT_ID
+ORDER BY 급여평균 DESC;
+
+--문제 5.
+--부서아이디가 NULL이 아니고, 입사일은 05년도 인 사람들의 부서 급여평균과, 급여합계를 평균기준 내림차순합니다
+--조건) 평균이 10000이상인 데이터만
+SELECT DEPARTMENT_ID, TRUNC(AVG(SALARY), 2) 급여평균, SUM(SALARY) 급여합계, COUNT(*)
+FROM EMPLOYEES
+WHERE DEPARTMENT_ID IS NOT NULL
+    AND HIRE_DATE LIKE '05%'
+GROUP BY DEPARTMENT_ID
+HAVING AVG(SALARY) >= 10000
+ORDER BY 급여평균 DESC;
+
+--문제 6.
+--직업별 월급합, 총합계를 출력하세요
+SELECT DECODE(GROUPING(JOB_ID), 1, '총합계', JOB_ID) JOB_ID
+    , SUM(SALARY) 월급합
+FROM EMPLOYEES
+GROUP BY ROLLUP(JOB_ID);
+
+--문제 7.
+--부서별, JOB_ID를 그룹핑 하여 토탈, 합계를 출력하세요.
+--GROUPING()을 이용하여 소계 합계를 표현하세요
+SELECT DECODE(GROUPING(DEPARTMENT_ID), 1, '총계', DEPARTMENT_ID) DEPARTMENT_ID
+    , DECODE(GROUPING(JOB_ID), 1, '소계', JOB_ID) JOB_ID
+    , COUNT(*) TOTAL
+    , SUM(SALARY) 합계
+FROM EMPLOYEES
+GROUP BY ROLLUP(DEPARTMENT_ID, JOB_ID)
+ORDER BY DEPARTMENT_ID, JOB_ID;
+
